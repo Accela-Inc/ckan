@@ -66,12 +66,16 @@ this.ckan.module('follow', function($, _) {
 		_onClickLoaded: function(json) {
 			var options = this.options;
 			var sandbox = this.sandbox;
+			var followNums = $("[data-module=followers]");
+			var nums = parseInt(followNums.text());
 			options.loading = false;
 			this.el.removeClass('disabled');
 			if (options.action == 'follow') {
+				followNums.html('<span>'+ (++nums) + '</span>');
 				options.action = 'unfollow';
 				this.el.html('<i class="icon-remove-sign"></i> ' + this.i18n('unfollow')).removeClass('btn-success').addClass('btn-danger');
 			} else {
+				followNums.html('<span>'+ (--nums) + '</span>');
 				options.action = 'follow';
 				this.el.html('<i class="icon-plus-sign"></i> ' + this.i18n('follow')).removeClass('btn-danger').addClass('btn-success');
 			}

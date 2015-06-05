@@ -99,6 +99,8 @@ def make_map():
 
     map.connect('home', '/', controller='home', action='index')
     map.connect('about', '/about', controller='home', action='about')
+    map.connect('feature', '/blog/data-the-infrastructure-of-digital-world', controller='home', action='feature')
+    map.connect('contact', '/contact', controller='home', action='contact')
 
     # CKAN API versioned.
     register_list = [

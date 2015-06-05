@@ -722,6 +722,7 @@ def user_list(context, data_dict):
 
     for user in query.all():
         result_dict = model_dictize.user_dictize(user[0], context)
+        result_dict.pop('sysadmin')
         users_list.append(result_dict)
 
     return users_list

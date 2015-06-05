@@ -224,10 +224,11 @@ class DatastorePlugin(p.SingletonPlugin):
                    'datastore_upsert': action.datastore_upsert,
                    'datastore_delete': action.datastore_delete,
                    'datastore_search': action.datastore_search,
+                   'datastore_search_sql': action.datastore_search_sql,
                   }
         if not self.legacy_mode:
             actions.update({
-                'datastore_search_sql': action.datastore_search_sql,
+                'datastore_delete_sql': action.datastore_delete_sql,
                 'datastore_make_private': action.datastore_make_private,
                 'datastore_make_public': action.datastore_make_public})
         return actions
@@ -244,6 +245,9 @@ class DatastorePlugin(p.SingletonPlugin):
         m.connect('/datastore/dump/{resource_id}',
                   controller='ckanext.datastore.controller:DatastoreController',
                   action='dump')
+        m.connect('/datastore/json/{resource_id}',
+                  controller='ckanext.datastore.controller:DatastoreController',
+                  action='json')
         return m
 
     def before_show(self, resource_dict):

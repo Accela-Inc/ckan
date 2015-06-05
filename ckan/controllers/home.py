@@ -188,6 +188,12 @@ class HomeController(base.BaseController):
     def about(self):
         return base.render('home/about.html')
 
+    def contact(self):
+        return base.render('home/contact.html')
+
+    def feature(self):
+        return base.render('home/feature.html')
+
     def cache(self, id):
         '''Manual way to clear the caches'''
         if id == 'clear':

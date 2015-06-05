@@ -1,7 +1,7 @@
 {% extends "page.html" %}
 
 {% block breadcrumb_content %}
-  <li class="active">{{ 'Statistics' }}</li>
+  <li class="active"><a href="/stats">{{ 'Statistics' }}</a></li>
 {% endblock %}
 
 {% block primary_content %}
@@ -105,12 +105,12 @@
     </section>
 
     <section id="stats-largest-groups" class="module-content tab-content">
-      <h2>{{ _('Largest Groups') }}</h2>
+      <h2>{{ _('Largest Topics') }}</h2>
       {% if c.largest_groups %}
         <table class="table table-chunky table-bordered table-striped">
           <thead>
             <tr>
-              <th>{{ _('Group') }}</th>
+              <th>{{ _('Topic') }}</th>
               <th class="metric">{{ _('Number of datasets') }}</th>
             </tr>
           </thead>
@@ -124,7 +124,7 @@
           </tbody>
         </table>
       {% else %}
-        <p class="empty">{{ _('No groups') }}</p>
+        <p class="empty">{{ _('No topics') }}</p>
       {% endif %}
     </section>
 
@@ -167,6 +167,298 @@
         </tbody>
       </table>
     </section>
+  
+    <!-- ************** edited ************* -->
+    <!-- dataset -->
+  <section id="stats-top-dataset-visit-for-total" class="module-content tab-content">
+      <h2>{{ _('Top Datasets Visit') }}</h2>
+      <table class="table table-chunky table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>{{ _('Dataset ') }}</th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-total" data-toggle="tab">{{ _('Total') }}</a></th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-days" data-toggle="tab">{{ _('Today') }}</a></th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-weeks" data-toggle="tab">{{ _('Recent 1 Week') }}</a></th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-months" data-toggle="tab">{{ _('Recent 1 Month') }}</a></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dataset_id, dataset_title, day_sum, week_sum, month_sum, total_sum in c.dataset_visit_by_total %}
+            <tr>
+              <td class="media" title="{{dataset_id}}">{{ dataset_title }}</td>
+              <td class="metric">{{ total_sum }}</td>
+              <td class="metric">{{ day_sum }}</td>
+              <td class="metric">{{ week_sum }}</td>
+              <td class="metric">{{ month_sum }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    
+    <section id="stats-top-dataset-visit-for-months" class="module-content tab-content">
+      <h2>{{ _('Top Datasets Visit') }}</h2>
+      <table class="table table-chunky table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>{{ _('Dataset ') }}</th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-total" data-toggle="tab">{{ _('Total') }}</a></th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-days" data-toggle="tab">{{ _('Today') }}</a></th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-weeks" data-toggle="tab">{{ _('Recent 1 Week') }}</a></th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-months" data-toggle="tab">{{ _('Recent 1 Month') }}</a></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dataset_id, dataset_title, day_sum, week_sum, month_sum, total_sum in c.dataset_visit_by_month %}
+            <tr>
+              <td class="media" title="{{dataset_id}}">{{ dataset_title }}</td>
+              <td class="metric">{{ total_sum }}</td>
+              <td class="metric">{{ day_sum }}</td>
+              <td class="metric">{{ week_sum }}</td>
+              <td class="metric">{{ month_sum }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    
+    <section id="stats-top-dataset-visit-for-weeks" class="module-content tab-content">
+      <h2>{{ _('Top Datasets Visit') }}</h2>
+      <table class="table table-chunky table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>{{ _('Dataset ') }}</th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-total" data-toggle="tab">{{ _('Total') }}</a></th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-days" data-toggle="tab">{{ _('Today') }}</a></th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-weeks" data-toggle="tab">{{ _('Recent 1 Week') }}</a></th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-months" data-toggle="tab">{{ _('Recent 1 Month') }}</a></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dataset_id, dataset_title, day_sum, week_sum, month_sum, total_sum in c.dataset_visit_by_week %}
+            <tr>
+              <td class="media" title="{{dataset_id}}">{{ dataset_title }}</td>
+              <td class="metric">{{ total_sum }}</td>
+              <td class="metric">{{ day_sum }}</td>
+              <td class="metric">{{ week_sum }}</td>
+              <td class="metric">{{ month_sum }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    
+    <section id="stats-top-dataset-visit-for-days" class="module-content tab-content">
+      <h2>{{ _('Top Datasets Visit') }}</h2>
+      <table class="table table-chunky table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>{{ _('Dataset ') }}</th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-total" data-toggle="tab">{{ _('Total') }}</a></th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-days" data-toggle="tab">{{ _('Today') }}</a></th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-weeks" data-toggle="tab">{{ _('Recent 1 Week') }}</a></th>
+            <th class="metric"><a href="#stats-top-dataset-visit-for-months" data-toggle="tab">{{ _('Recent 1 Month') }}</a></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dataset_id, dataset_title, day_sum, week_sum, month_sum, total_sum in c.dataset_visit_by_day %}
+            <tr>
+              <td class="media" title="{{dataset_id}}">{{ dataset_title }}</td>
+              <td class="metric">{{ total_sum }}</td>
+              <td class="metric">{{ day_sum }}</td>
+              <td class="metric">{{ week_sum }}</td>
+              <td class="metric">{{ month_sum }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    
+    <!-- resource -->
+    <section id="stats-top-resource-visit-for-total" class="module-content tab-content">
+      <h2>{{ _('Top Resources Visit') }}</h2>
+      <table class="table table-chunky table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>{{ _('Resource ') }}</th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-total" data-toggle="tab">{{ _('Total') }}</a></th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-days" data-toggle="tab">{{ _('Today') }}</a></th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-weeks" data-toggle="tab">{{ _('Recent 1 Week') }}</a></th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-months" data-toggle="tab">{{ _('Recent 1 Month') }}</a></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for resource_id, resource_title, day_sum, week_sum, month_sum, total_sum in c.resource_visit_by_total %}
+            <tr>
+              <td class="media" title="{{resource_id}}">{{ resource_title }}</td>
+              <td class="metric">{{ total_sum }}</td>
+              <td class="metric">{{ day_sum }}</td>
+              <td class="metric">{{ week_sum }}</td>
+              <td class="metric">{{ month_sum }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    
+    <section id="stats-top-resource-visit-for-months" class="module-content tab-content">
+      <h2>{{ _('Top Resources Visit') }}</h2>
+      <table class="table table-chunky table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>{{ _('Resource ') }}</th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-total" data-toggle="tab">{{ _('Total') }}</a></th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-days" data-toggle="tab">{{ _('Today') }}</a></th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-weeks" data-toggle="tab">{{ _('Recent 1 Week') }}</a></th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-months" data-toggle="tab">{{ _('Recent 1 Month') }}</a></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for resource_id, resource_title, day_sum, week_sum, month_sum, total_sum in c.resource_visit_by_month %}
+            <tr>
+              <td class="media" title="{{resource_id}}">{{ resource_title }}</td>
+              <td class="metric">{{ total_sum }}</td>
+              <td class="metric">{{ day_sum }}</td>
+              <td class="metric">{{ week_sum }}</td>
+              <td class="metric">{{ month_sum }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    
+    <section id="stats-top-resource-visit-for-weeks" class="module-content tab-content">
+      <h2>{{ _('Top Resources Visit') }}</h2>
+      <table class="table table-chunky table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>{{ _('Resource ') }}</th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-total" data-toggle="tab">{{ _('Total') }}</a></th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-days" data-toggle="tab">{{ _('Today') }}</a></th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-weeks" data-toggle="tab">{{ _('Recent 1 Week') }}</a></th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-months" data-toggle="tab">{{ _('Recent 1 Month') }}</a></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for resource_id, resource_title, day_sum, week_sum, month_sum, total_sum in c.resource_visit_by_week %}
+            <tr>
+              <td class="media" title="{{resource_id}}">{{ resource_title }}</td>
+              <td class="metric">{{ total_sum }}</td>
+              <td class="metric">{{ day_sum }}</td>
+              <td class="metric">{{ week_sum }}</td>
+              <td class="metric">{{ month_sum }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    
+    <section id="stats-top-resource-visit-for-days" class="module-content tab-content">
+      <h2>{{ _('Top Resources Visit') }}</h2>
+      <table class="table table-chunky table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>{{ _('Resource ') }}</th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-total" data-toggle="tab">{{ _('Total') }}</a></th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-days" data-toggle="tab">{{ _('Today') }}</a></th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-weeks" data-toggle="tab">{{ _('Recent 1 Week') }}</a></th>
+            <th class="metric"><a href="#stats-top-resource-visit-for-months" data-toggle="tab">{{ _('Recent 1 Month') }}</a></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for resource_id, resource_title, day_sum, week_sum, month_sum, total_sum in c.resource_visit_by_day %}
+            <tr>
+              <td class="media" title="{{resource_id}}">{{ resource_title }}</td>
+              <td class="metric">{{ total_sum }}</td>
+              <td class="metric">{{ day_sum }}</td>
+              <td class="metric">{{ week_sum }}</td>
+              <td class="metric">{{ month_sum }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    
+    
+    <!-- user visit -->
+    <section id="stats-user-visit-for-days" class="module-content tab-content ">
+      <h2>
+        {{ _('User Visit for Days') }}
+        (<a href="#stats-user-visit-for-weeks" data-toggle="tab">for weeks</a> or
+        <a href="#stats-user-visit-for-months" data-toggle="tab">for months</a>)
+      </h2>
+        
+      {% set xaxis = {'mode': 'time', 'timeformat': '%y-%b-%d'} %}
+      {% set yaxis = {'min': 0} %}
+      <table class="table table-chunky table-bordered table-striped" data-module="plot" data-module-xaxis="{{ h.dump_json(xaxis) }}" data-module-yaxis="{{ h.dump_json(yaxis) }}">
+        <thead>
+          <tr>
+            <th>{{ _("Date") }}</th>
+            <th>{{ _("Total users") }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in c.user_visit_by_day_json %}
+            <tr>
+              <th data-type="date" data-value="{{ row.date.strftime("%s") }}"><time datetime="{{ row.date.isoformat() }}">{{ h.render_datetime(row.date) }}</time></th>
+              <td>{{ row.visit_count }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    
+    <section id="stats-user-visit-for-weeks" class="module-content tab-content ">
+      <h2>
+        {{ _('User Visit for Weeks') }}
+        (<a href="#stats-user-visit-for-days" data-toggle="tab">for days</a> or
+        <a href="#stats-user-visit-for-months" data-toggle="tab">for months</a>)
+      </h2>
+      {% set xaxis = {'mode': 'time', 'timeformat': '%y-%b-%d'} %}
+      {% set yaxis = {'min': 0} %}
+      <table class="table table-chunky table-bordered table-striped" data-module="plot" data-module-xaxis="{{ h.dump_json(xaxis) }}" data-module-yaxis="{{ h.dump_json(yaxis) }}">
+        <thead>
+          <tr>
+            <th>{{ _("Date") }}</th>
+            <th>{{ _("Total users") }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in c.user_visit_by_week_json %}
+            <tr>
+              <th data-type="date" data-value="{{ row.date.strftime("%s") }}"><time datetime="{{ row.date.isoformat() }}">{{ h.render_datetime(row.date) }}</time></th>
+              <td>{{ row.visit_count }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    
+    <section id="stats-user-visit-for-months" class="module-content tab-content ">
+      <h2>{{ _('User Visit for Month') }}
+        (<a href="#stats-user-visit-for-days" data-toggle="tab">for days</a> or
+        <a href="#stats-user-visit-for-weeks" data-toggle="tab">for weeks</a>)
+      </h2>
+      {% set xaxis = {'mode': 'time', 'timeformat': '%y-%b-%d'} %}
+      {% set yaxis = {'min': 0} %}
+      <table class="table table-chunky table-bordered table-striped" data-module="plot" data-module-xaxis="{{ h.dump_json(xaxis) }}" data-module-yaxis="{{ h.dump_json(yaxis) }}">
+        <thead>
+          <tr>
+            <th>{{ _("Date") }}</th>
+            <th>{{ _("Total users") }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in c.user_visit_by_month_json %}
+            <tr>
+              <th data-type="date" data-value="{{ row.date.strftime("%s") }}"><time datetime="{{ row.date.isoformat() }}">{{ h.render_datetime(row.date) }}</time></th>
+              <td>{{ row.visit_count }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  
   </article>
 {% endblock %}
 
@@ -179,9 +471,12 @@
         <li class="nav-item"><a href="#stats-dataset-revisions" data-toggle="tab">{{ _('Dataset Revisions per Week') }}</a></li>
         <li class="nav-item"><a href="#stats-top-rated" data-toggle="tab">{{ _('Top Rated Datasets') }}</a></li>
         <li class="nav-item"><a href="#stats-most-edited" data-toggle="tab">{{ _('Most Edited Datasets') }}</a></li>
-        <li class="nav-item"><a href="#stats-largest-groups" data-toggle="tab">{{ _('Largest Groups') }}</a></li>
+        <li class="nav-item"><a href="#stats-largest-groups" data-toggle="tab">{{ _('Largest Topics') }}</a></li>
         <li class="nav-item"><a href="#stats-top-tags" data-toggle="tab">{{ _('Top Tags') }}</a></li>
         <li class="nav-item"><a href="#stats-most-owned" data-toggle="tab">{{ _('Users Owning Most Datasets') }}</a></li>
+        <li class="nav-item"><a href="#stats-top-resource-visit-for-total" data-toggle="tab">{{ _('Top Resource Visit') }}</a></li>
+        <li class="nav-item"><a href="#stats-top-dataset-visit-for-total" data-toggle="tab">{{ _('Top Datasets Visit') }}</a></li>
+        <li class="nav-item"><a href="#stats-user-visit-for-days" data-toggle="tab">{{ _('User Visit') }}</a></li>
       </ul>
     </nav>
   </section>
@@ -197,3 +492,5 @@ See: http://stackoverflow.com/questions/10208062/using-flot-with-bootstrap-ie8-i
 {% resource "vendor/block_html5_shim" %}
 {% resource "ckanext_stats/stats" %}
 {% endblock %}
+
+

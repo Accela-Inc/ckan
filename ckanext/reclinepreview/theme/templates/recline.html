@@ -6,7 +6,215 @@
       <div class="loading-spinner"></div>
       <div class="left">{{ _('Loading...') }}</div>
     </h4>
-  </div>
+    <div class="recline-data-explorer">
+        <div class="alert-messages" id="alert-messages">
+            <div class="alert-loader">                   Loading                     <span class="notification-loader">&nbsp;</span></div>
+        </div>
+        <div class="header clearfix">
+            <div class="navigation">
+                <div class="btn-group" data-toggle="buttons-radio">
+                    <a id="to-slickgrid" href="javascript:void(0);" data-view="grid" class="btn active">Grid</a>
+                    <a id="to-graph" href="javascript:void(0);" data-view="graph" class="btn">Graph</a>
+                    <a id="to-leaflet" href="javascript:void(0);" data-view="map" class="btn">Map</a>
+                </div>
+            </div>
+            <div class="recline-results-info">
+                <span id="doc-count"></span>
+                records
+            </div>
+            <div class="recline-pager">
+                <div class="pagination">
+                    <ul style="float: left; margin-right: 4px;">
+                        <li class="prev action-pagination-update">
+                            <a href="javascript:prevSearch();">«</a>
+                        </li>
+                        <li class="active">
+                            <a>
+                                <input id="searchOffset" name="from" type="text" value="1">
+                                –
+                                <input id="searchEnd" name="to" type="text" value="100"></a>
+                        </li>
+                        <li class="next action-pagination-update">
+                            <a href="javascript:nextSearch();">»</a>
+                        </li>
+                    </ul>
+                    <button id="pager-search-btn" type="submit" onclick="javascript:filter();" class="btn">Go »</button>
+                </div>
+            </div>
+            <div id="visualize-btn-group" class="menu-right" style="display: none;">
+                <div class="btn-group" data-toggle="buttons-checkbox">
+                    <a id="visualize-btn" href="javascript:void(0);" class="btn">Visualize</a>
+                </div>
+            </div>
+            <div id="menu-btn-group" class="menu-right" style="display: none;">
+                <div class="btn-group" data-toggle="buttons-checkbox">
+                    <a id="menu-btn" href="javascript:void(0);" class="btn">Columns</a>
+                </div>
+            </div>
+            <div id="filter-btn-group" class="menu-right">
+                <div class="btn-group" data-toggle="buttons-checkbox">
+                    <a id="filter-btn" href="javascript:void(0);"class="btn">Filters</a>
+                </div>
+            </div>
+            <div class="query-editor-here">
+                <div class="recline-query-editor">
+                    <form action="" method="GET" onsubmit="search();return false;" class="form-inline">
+                        <div class="input-prepend text-query">
+                            <span class="add-on"> <i class="icon-search"></i>
+                            </span>
+                            <input type="text" id="searchQ" name="q" value="" class="span2" placeholder="Search data ..."></div>
+                        <button type="submit" onclick="javascript:search();" class="btn">Go »</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="data-view-sidebar" style="display: none;">
 
-  {% resource 'ckanext-reclinepreview/main' %}
+            <div id="map-panel" style="display: none;">
+                <div class="tree1">
+                    <span>COLUMNS OPTIONS</span>
+                </div>
+                <div id="columns-all">
+                    <label><input id="checked-all" name="checked-all" type="checkbox" value="ALL" checked>ALL</label>
+                </div>
+                <div id="columns-form"></div>
+            </div>
+
+            <div class="graph-panel" style="display: none;">
+                <div class="tree1">
+                    <span>GRAPH OPTIONS</span>
+                </div>
+                <div id="chart-type-title" class="tree3">
+                    <span class="iconspan tree3-span-down"></span>
+                    <span>Chart Type</span>
+                </div>
+                <div id="chart-types" class="toggle-div">
+                    <div class="chartType">
+                        <label class="current-chart" for="line">
+                            <span>
+                                <span>Line</span>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="chartType">
+                        <label for="areaSpline">
+                            <span>
+                                <span>Area Spline</span>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="chartType">
+                        <label for="column">
+                            <span>
+                                <span>Column</span>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="chartType">
+                        <label for="column3d">
+                            <span>
+                                <span>3D Column</span>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="chartType">
+                        <label for="bar">
+                            <span>
+                                <span>Bar</span>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="chartType" id="pie-div">
+                        <label for="pie">
+                            <span>
+                                <span>Pie</span>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="chartType" id="pie3d-div">
+                        <label for="pie3d">
+                            <span>
+                                <span>3D Pie</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                <div id="column-definition-title" class="tree3">
+                    <span class="iconspan tree3-span-down"></span>
+                    <span>Chart Definition</span>
+                </div>
+                <div id="column-definition" class="toggle-div">
+                    <div id="series">
+                        <fieldset>
+                            <label style="width:230px; height: 18px;"><span class="series-span">X-Axis</span></label>
+                            <!-- <select class="series-field" id="group-column"></select> -->
+                            <select id="group-column-type" style='width:80px;margin-right:2px;'>
+                                <option value="value">Value</option>
+                                <option value="groupby">GroupBy</option>
+                            </select>
+                            <select id="group-column" name='series-field' class='series-field' style='width:108px;'></select>
+                        </fieldset>
+                        <input type="button" id="add-series-btn" value="Add Series" style="width: 120px;" class="btn" onclick="javascript:addSeries();">
+                    </div>
+                    <div id="group-by" style="display: none;">
+                        <fieldset>
+                            <label>Group By</label>
+                            <select id="group-by-field"></select>
+                        </fieldset>
+                    </div>
+                </div>
+                <div id="chart-embed-title" class="tree3">
+                    <span class="iconspan tree3-span-down"></span>
+                    <span>Chart Embed</span>
+                </div>
+                <div id="chart-embed" class="toggle-div">
+                    <select id="embed-type" style="width: 95px; margin: 0px;">
+                        <option value="iframe">Iframe</option>
+                        <option value="html">HTML</option>
+                        <option value="js">Javascript</option>
+                    </select>
+                    <input type="button" value="Embed Code" style="width: 95px;" class="btn" onclick="javascript:createEmbedCode();">
+                    <textarea id="embedCode" style="margin-top: 5px;height: 100px;width: 190px;"></textarea>
+                </div>
+            </div>
+            <div class="filter-panel" style="display: none;">
+                <div class="tree1">
+                    <span>Filters</span>
+                </div>
+                <div id="add-filter-title" class="tree3">
+                    <span class="iconspan tree3-span-down"></span>
+                    <span>Add Filter</span>
+                </div>
+                <div id="add-filter" class="toggle-div">
+                    <fieldset>
+                        <label>Field</label>
+                        <select id="filter-field"></select>
+                        <label>Filter Type</label>
+                        <select id="filter-field-type" disabled="disabled"></select>
+                        <input type="button" id="add-filter-btn" value="Add Filter" style="width: 120px;" class="btn" disabled="disabled" onclick="javascript:addAnFilter();">
+                    </fieldset>
+                </div>
+                <div id="filters-title" class="tree3">
+                    <span class="iconspan"></span>
+                    <span>Filters</span>
+                </div>
+                <div id="filters" class="toggle-div" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="data-view-container">
+            <div id="slickgrid" style="min-height:500px;height:600px;"></div>
+            <div id="graph" style="display: none;width: 628px; min-height: 400px;">
+                <div id="highcharts" style="width: 628px; min-height: 400px;"></div>
+                <div id="sliders" style="min-width:310px;max-width: 628;margin: 0 auto;display: none;">
+                    <table>
+                        <tr><td>Alpha Angle</td><td><input id="R0" type="range" min="0" max="45" value="15"/> <span id="R0-value" class="value"></span></td></tr>
+                        <tr><td>Beta Angle</td><td><input id="R1" type="range" min="0" max="45" value="15"/> <span id="R1-value" class="value"></span></td></tr>
+                    </table>
+                </div>
+            </div>
+            <div id="leaflet" style="height: 600px; display: none;"></div>
+        </div>
+    </div>
+</div>
+{% resource 'ckanext-reclinepreview/main' %}
 {% endblock %}

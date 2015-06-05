@@ -47,6 +47,9 @@ def datastore_search(context, data_dict):
 def datastore_search_sql(context, data_dict):
     return {'success': True}
 
+def datastore_delete_sql(context, data_dict):
+    return datastore_auth(context, data_dict)
+
 
 def datastore_change_permissions(context, data_dict):
     return datastore_auth(context, data_dict)

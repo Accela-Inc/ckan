@@ -162,9 +162,70 @@ class GroupController(base.BaseController):
             collection=results,
             page=request.params.get('page', 1),
             url=h.pager_url,
-            items_per_page=21
+            items_per_page=24
         )
+
+        c.facet_titles = self._index()
+
         return render(self._index_template(group_type))
+
+    def _index(self):
+        from ckan.lib.search import SearchError
+
+        c.query_error = False
+
+        try:
+            context = {'model': model, 'session': model.Session,
+                       'user': c.user or c.author, 'for_view': True,
+                       'auth_user_obj': c.userobj}
+
+            facets = OrderedDict()
+
+            default_facet_titles = {
+                    'organization': _('Organizations'),
+                    'groups': _('Groups'),
+                    'tags': _('Tags'),
+                    'res_format': _('Formats'),
+                    'license_id': _('Licenses'),
+                    }
+
+            for facet in g.facets:
+                if facet in default_facet_titles:
+                    facets[facet] = default_facet_titles[facet]
+                else:
+                    facets[facet] = facet
+
+            c.facet_titles = facets
+
+            data_dict = {
+                'facet.field': facets.keys()
+            }
+
+            query = get_action('package_search')(context, data_dict)
+
+            c.facets = query['facets']
+            c.search_facets = query['search_facets']
+
+        except SearchError, se:
+            log.error('Dataset search error: %r', se.args)
+            c.query_error = True
+            c.facets = {}
+            c.search_facets = {}
+
+        c.search_facets_limits = {}
+        for facet in c.search_facets.keys():
+            try:
+                limit = int(request.params.get('_%s_limit' % facet,
+                                               g.facets_default_number))
+            except ValueError:
+                abort(400, _('Parameter "{parameter_name}" is not '
+                             'an integer').format(
+                                 parameter_name='_%s_limit' % facet
+                             ))
+            c.search_facets_limits[facet] = limit
+
+        return c.facet_titles
+
 
     def read(self, id, limit=20):
         group_type = self._get_group_type(id.split('@')[0])

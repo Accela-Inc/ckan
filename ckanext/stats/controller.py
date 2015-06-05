@@ -19,6 +19,34 @@ class StatsController(BaseController):
         c.num_packages_by_week = rev_stats.get_num_packages_by_week()
         c.package_revisions_by_week = rev_stats.get_by_week('package_revisions')
 
+        #******************** edited *********************
+        #dataset visit
+        c.dataset_visit_by_total = stats.dataset_visit_count('total')
+        c.dataset_visit_by_month = stats.dataset_visit_count('month')
+        c.dataset_visit_by_week = stats.dataset_visit_count('week')
+        c.dataset_visit_by_day = stats.dataset_visit_count('day')
+        #resource visit
+        c.resource_visit_by_total = stats.resource_visit_count('total')
+        c.resource_visit_by_month = stats.resource_visit_count('month')
+        c.resource_visit_by_week = stats.resource_visit_count('week')
+        c.resource_visit_by_day = stats.resource_visit_count('day')
+        #user visit
+        c.user_visit_by_day = stats.user_visit_by_day()
+        c.user_visit_by_week = stats.user_visit_by_week()
+        c.user_visit_by_month = stats.user_visit_by_month()
+        
+        c.user_visit_by_day_json = []
+        c.user_visit_by_week_json = []
+        c.user_visit_by_month_json = []
+        
+        for visit_count, date in c.user_visit_by_day:
+            c.user_visit_by_day_json.append({'date': h.date_str_to_datetime(date), 'visit_count': visit_count})
+        for visit_count, date in c.user_visit_by_week:
+            c.user_visit_by_week_json.append({'date': date, 'visit_count': visit_count})
+        for visit_count, date in c.user_visit_by_month:
+            c.user_visit_by_month_json.append({'date': date, 'visit_count': visit_count})
+        #******************** edited *********************
+        
         # Used in the legacy CKAN templates.
         c.packages_by_week = []
 
