@@ -162,8 +162,11 @@ class GroupController(base.BaseController):
             collection=results,
             page = self._get_page_number(request.params),
             url=h.pager_url,
-            items_per_page=21
+            items_per_page=24
         )
+
+        c.facet_titles = self._index()
+
         return render(self._index_template(group_type))
 
     def read(self, id, limit=20):
