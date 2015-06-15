@@ -7,9 +7,6 @@ from ckan.common import _
 from ckan.logic.auth.create import _check_group_auth
 
 
-def make_latest_pending_package_active(context, data_dict):
-    return new_authz.is_authorized('package_update', context, data_dict)
-
 @logic.auth_allow_anonymous_access
 def package_update(context, data_dict):
     user = context.get('user')
@@ -58,11 +55,7 @@ def resource_update(context, data_dict):
     resource = logic_auth.get_resource_object(context, data_dict)
 
     # check authentication against package
-    query = model.Session.query(model.Package)\
-        .join(model.ResourceGroup)\
-        .join(model.Resource)\
-        .filter(model.ResourceGroup.id == resource.resource_group_id)
-    pkg = query.first()
+    pkg = model.Package.get(resource.package_id)
     if not pkg:
         raise logic.NotFound(
             _('No package found for this resource, cannot check auth.')
@@ -78,6 +71,12 @@ def resource_update(context, data_dict):
     else:
         return {'success': True}
 
+
+def resource_view_update(context, data_dict):
+    return resource_update(context, {'id': data_dict['resource_id']})
+
+def resource_view_reorder(context, data_dict):
+    return resource_update(context, {'id': data_dict['resource_id']})
 
 def package_relationship_update(context, data_dict):
     return new_authz.is_authorized('package_relationship_create',
@@ -217,6 +216,16 @@ def user_update(context, data_dict):
         return {'success': False,
                 'msg': _('User %s not authorized to edit user %s') %
                         (user, user_obj.id)}
+
+
+def user_generate_apikey(context, data_dict):
+    user = context['user']
+    user_obj = logic_auth.get_user_object(context, data_dict)
+    if user == user_obj.name:
+        # Allow users to update only their own user accounts.
+        return {'success': True}
+    return {'success': False, 'msg': _('User {0} not authorized to update user'
+            ' {1}'.format(user, user_obj.id))}
 
 
 def revision_change_state(context, data_dict):

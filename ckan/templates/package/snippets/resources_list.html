@@ -13,7 +13,7 @@ Example:
   <h3>{{ _('Data and Resources') }}</h3>
   {% block resource_list %}
     {% if resources %}
-      <ul class="resource-list">
+      <ul class="{% block resource_list_class %}resource-list{% endblock %}">
         {% block resource_list_inner %}
           {% for resource in resources %}
             {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=resource %}
@@ -21,7 +21,7 @@ Example:
         {% endblock %}
       </ul>
     {% else %}
-      {% if h.check_access('resource_create', pkg) %}
+      {% if h.check_access('resource_create', {'package_id': pkg['id']}) %}
           {% trans url=h.url_for(controller='package', action='new_resource', id=pkg.name) %}
             <p class="empty">This dataset has no data, <a href="{{ url }}">why not add some?</a></p>
           {% endtrans %}
