@@ -7,6 +7,44 @@
 Changelog
 ---------
 
+v2.4
+====
+
+Changes and deprecations
+------------------------
+
+* The ``package_show`` API call does not return the ``tracking_summary``,
+  keys in the dataset or resources by default any more.
+
+  Any custom templates or users of this API call that use these values will
+  need to pass: ``include_tracking=True``.
+
+* The legacy `tests` directory has moved to `tests/legacy`, the
+  `new_tests` directory has moved to `tests` and the `new_authz.py`
+  module has been renamed `authz.py`. Code that imports names from the
+  old locations will continue to work in this release but will issue
+  a deprecation warning.
+
+* Add text to account links in header, fixes text based browser support #2258
+
+* Add middleware that cleans up the response string after it has been
+  served, stabilizes memory usage for large requests #1847
+
+* The ``vocabulary_show`` and ``tag_show`` API calls no longer returns the 
+  ``packages`` key - i.e. datasets that use the vocabulary or tag. 
+  However ``tag_show`` now has an ``include_datasets`` option. (#1886)
+
+* `organization_list_for_user` now returns organizations in hierarchy if they
+  exist for roles set in `ckan.auth.roles_that_cascade_to_sub_groups`.
+
+* Update license keys to match opendefinition.org #2110
+
+* The ``group_show`` and ``organization_show`` API calls do not return
+  ``datasets`` by default any more.
+
+  Custom templates or users of this API call will need to pass
+  ``include_datasets=True`` to include datasets in the response.
+
 v2.3 2015-03-04
 ===============
 

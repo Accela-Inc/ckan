@@ -260,6 +260,7 @@ class DatastorePlugin(p.SingletonPlugin):
                    'datastore_delete': action.datastore_delete,
                    'datastore_search': action.datastore_search,
                    'datastore_search_sql': action.datastore_search_sql,
+                   'datastore_info': action.datastore_info,
                   }
         if not self.legacy_mode:
             actions.update({
@@ -272,6 +273,7 @@ class DatastorePlugin(p.SingletonPlugin):
         return {'datastore_create': auth.datastore_create,
                 'datastore_upsert': auth.datastore_upsert,
                 'datastore_delete': auth.datastore_delete,
+                'datastore_info': auth.datastore_info,
                 'datastore_search': auth.datastore_search,
                 'datastore_search_sql': auth.datastore_search_sql,
                 'datastore_change_permissions': auth.datastore_change_permissions}
