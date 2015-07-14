@@ -673,6 +673,18 @@ class ApiController(base.BaseController):
         out = map(convert_to_dict, query.all())
         return out
 
+    @jsonp.jsonpify
+    def organization_autocomplete(self):
+        q = request.params.get('q', '')
+        limit = request.params.get('limit', 20)
+        organization_list = []
+
+        if q:
+            context = {'user': c.user, 'model': model}
+            data_dict = {'q': q, 'limit': limit}
+            organization_list = get_action('organization_autocomplete')(context, data_dict)
+        return organization_list
+
     def is_slug_valid(self):
 
         def package_exists(val):
@@ -718,7 +730,8 @@ class ApiController(base.BaseController):
         return self._finish_ok(resultSet)
 
     def tag_autocomplete(self):
-        q = request.params.get('incomplete', '')
+        q = request.str_params.get('incomplete', '')
+        q = unicode(urllib.unquote(q), 'utf-8')
         limit = request.params.get('limit', 10)
         tag_names = []
         if q:

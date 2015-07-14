@@ -8,7 +8,18 @@ from ckan import model
 from ckan.lib.mailer import create_reset_key
 
 
+webtest_submit = helpers.webtest_submit
 submit_and_follow = helpers.submit_and_follow
+
+
+def _get_user_edit_page(app):
+    user = factories.User()
+    env = {'REMOTE_USER': user['name'].encode('ascii')}
+    response = app.get(
+        url=url_for(controller='user', action='edit'),
+        extra_environ=env,
+    )
+    return env, response, user
 
 
 class TestUser(helpers.FunctionalTestBase):
@@ -46,8 +57,43 @@ class TestUser(helpers.FunctionalTestBase):
 
         assert_false(dataset_title in response)
 
-    def test_edit_user(self):
+
+class TestUserEdit(helpers.FunctionalTestBase):
+
+    def test_user_edit_no_user(self):
+        app = self._get_test_app()
+        response = app.get(
+            url_for(controller='user', action='edit', id=None),
+            status=400
+        )
+        assert_true('No user specified' in response)
+
+    def test_user_edit_unknown_user(self):
+        '''Attempt to read edit user for an unknown user redirects to login
+        page.'''
+        app = self._get_test_app()
+        response = app.get(
+            url_for(controller='user', action='edit', id='unknown_person'),
+            status=302  # redirect to login page
+        )
+        response = response.follow()
+        assert_true('Login' in response)
+
+    def test_user_edit_not_logged_in(self):
+        '''Attempt to read edit user for an existing, not-logged in user
+        redirects to login page.'''
+        app = self._get_test_app()
         user = factories.User()
+        username = user['name']
+        response = app.get(
+            url_for(controller='user', action='edit', id=username),
+            status=302
+        )
+        response = response.follow()
+        assert_true('Login' in response)
+
+    def test_edit_user(self):
+        user = factories.User(password='pass')
         app = self._get_test_app()
         env = {'REMOTE_USER': user['name'].encode('ascii')}
         response = app.get(
@@ -55,7 +101,7 @@ class TestUser(helpers.FunctionalTestBase):
             extra_environ=env,
         )
         # existing values in the form
-        form = response.forms['user-edit']
+        form = response.forms['user-edit-form']
         assert_equal(form['name'].value, user['name'])
         assert_equal(form['fullname'].value, user['fullname'])
         assert_equal(form['email'].value, user['email'])
@@ -70,6 +116,7 @@ class TestUser(helpers.FunctionalTestBase):
         form['email'] = 'new@example.com'
         form['about'] = 'new about'
         form['activity_streams_email_notifications'] = True
+        form['old_password'] = 'pass'
         form['password1'] = 'newpass'
         form['password2'] = 'newpass'
         response = submit_and_follow(app, form, env, 'save')
@@ -98,3 +145,146 @@ class TestUser(helpers.FunctionalTestBase):
         user_obj = helpers.model.User.by_name(user['name'])  # Update user_obj
 
         assert_true(key != user_obj.reset_key)
+
+    def test_password_reset_correct_password(self):
+        """
+        user password reset attempted with correct old password
+        """
+        app = self._get_test_app()
+        env, response, user = _get_user_edit_page(app)
+
+        form = response.forms['user-edit-form']
+
+        # factory returns user with password 'pass'
+        form.fields['old_password'][0].value = 'pass'
+        form.fields['password1'][0].value = 'newpass'
+        form.fields['password2'][0].value = 'newpass'
+
+        response = submit_and_follow(app, form, env, 'save')
+        assert_true('Profile updated' in response)
+
+    def test_password_reset_incorrect_password(self):
+        """
+        user password reset attempted with invalid old password
+        """
+
+        app = self._get_test_app()
+        env, response, user = _get_user_edit_page(app)
+
+        form = response.forms['user-edit-form']
+
+        # factory returns user with password 'pass'
+        form.fields['old_password'][0].value = 'wrong-pass'
+        form.fields['password1'][0].value = 'newpass'
+        form.fields['password2'][0].value = 'newpass'
+
+        response = webtest_submit(form, 'save', status=200, extra_environ=env)
+        assert_true('Old Password: incorrect password' in response)
+
+
+class TestUserFollow(helpers.FunctionalTestBase):
+
+    def test_user_follow(self):
+        app = self._get_test_app()
+
+        user_one = factories.User()
+        user_two = factories.User()
+
+        env = {'REMOTE_USER': user_one['name'].encode('ascii')}
+        follow_url = url_for(controller='user',
+                             action='follow',
+                             id=user_two['id'])
+        response = app.post(follow_url, extra_environ=env, status=302)
+        response = response.follow()
+        assert_true('You are now following {0}'
+                    .format(user_two['display_name'])
+                    in response)
+
+    def test_user_follow_not_exist(self):
+        '''Pass an id for a user that doesn't exist'''
+        app = self._get_test_app()
+
+        user_one = factories.User()
+
+        env = {'REMOTE_USER': user_one['name'].encode('ascii')}
+        follow_url = url_for(controller='user',
+                             action='follow',
+                             id='not-here')
+        response = app.post(follow_url, extra_environ=env, status=302)
+        response = response.follow(status=404)
+        assert_true('User not found' in response)
+
+    def test_user_unfollow(self):
+        app = self._get_test_app()
+
+        user_one = factories.User()
+        user_two = factories.User()
+
+        env = {'REMOTE_USER': user_one['name'].encode('ascii')}
+        follow_url = url_for(controller='user',
+                             action='follow',
+                             id=user_two['id'])
+        app.post(follow_url, extra_environ=env, status=302)
+
+        unfollow_url = url_for(controller='user', action='unfollow',
+                               id=user_two['id'])
+        unfollow_response = app.post(unfollow_url, extra_environ=env,
+                                     status=302)
+        unfollow_response = unfollow_response.follow()
+
+        assert_true('You are no longer following {0}'
+                    .format(user_two['display_name'])
+                    in unfollow_response)
+
+    def test_user_unfollow_not_following(self):
+        '''Unfollow a user not currently following'''
+        app = self._get_test_app()
+
+        user_one = factories.User()
+        user_two = factories.User()
+
+        env = {'REMOTE_USER': user_one['name'].encode('ascii')}
+        unfollow_url = url_for(controller='user', action='unfollow',
+                               id=user_two['id'])
+        unfollow_response = app.post(unfollow_url, extra_environ=env,
+                                     status=302)
+        unfollow_response = unfollow_response.follow()
+
+        assert_true('You are not following {0}'.format(user_two['id'])
+                    in unfollow_response)
+
+    def test_user_unfollow_not_exist(self):
+        '''Unfollow a user that doesn't exist.'''
+        app = self._get_test_app()
+
+        user_one = factories.User()
+
+        env = {'REMOTE_USER': user_one['name'].encode('ascii')}
+        unfollow_url = url_for(controller='user', action='unfollow',
+                               id='not-here')
+        unfollow_response = app.post(unfollow_url, extra_environ=env,
+                                     status=302)
+        unfollow_response = unfollow_response.follow(status=404)
+
+        assert_true('User not found' in unfollow_response)
+
+    def test_user_follower_list(self):
+        '''Following users appear on followers list page.'''
+        app = self._get_test_app()
+
+        user_one = factories.Sysadmin()
+        user_two = factories.User()
+
+        env = {'REMOTE_USER': user_one['name'].encode('ascii')}
+        follow_url = url_for(controller='user',
+                             action='follow',
+                             id=user_two['id'])
+        app.post(follow_url, extra_environ=env, status=302)
+
+        followers_url = url_for(controller='user', action='followers',
+                                id=user_two['id'])
+
+        # Only sysadmins can view the followers list pages
+        followers_response = app.get(followers_url, extra_environ=env,
+                                     status=200)
+        assert_true(user_one['display_name'] in followers_response)
