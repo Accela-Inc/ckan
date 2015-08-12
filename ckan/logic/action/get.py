@@ -843,6 +843,13 @@ def user_list(context, data_dict):
 
     for user in query.all():
         result_dict = model_dictize.user_dictize(user[0], context)
+        # CivicData - to remove sysadmin field from user_list API block starts
+        try: 
+            result_dict.pop('sysadmin')
+        except Exception, ex:
+            err_msg = "CivicData customization. Unable to pop sysadmin. \nAdditional details: "+str(ex)
+            log.warning(err_msg)
+        # CivicData - to remove sysadmin field from user_list API block ends
         users_list.append(result_dict)
 
     return users_list
