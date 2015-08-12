@@ -107,6 +107,14 @@ def url(*args, **kw):
     wrapper for pylons.url'''
     locale = kw.pop('locale', None)
     my_url = _pylons_default_url(*args, **kw)
+    # CivicData - Bug-Fix for 'Unsecured content http served over https' block starts
+    try: 
+        if my_url.find('http://') == 0 and (config.get('ckan.site_url')).find('https://') == 0:
+            my_url = 'https://' + my_url[7: ]
+    except Exception, ex:
+        err_msg = "CivicData customization. Error while changing url from http to https. \nAdditional details: "+str(ex)
+        log.warning(err_msg)
+    # CivicData - Bug-Fix for 'Unsecured content http served over https' block ends
     return _add_i18n_to_url(my_url, locale=locale, **kw)
 
 
@@ -1726,6 +1734,15 @@ def resource_preview(resource, package):
                       resource_id=resource['id'], id=package['id'], qualified=True)
     else:
         return False
+    
+    # CivicData - Fix for 'Unsecured content http served over https while serving datapreview in iframe' which is specially seen in Chrome block starts
+    try: 
+        if url.find('http://') == 0 and (config.get('ckan.site_url')).find('https://') == 0:
+            url = 'https://' + url[7: ]
+    except Exception, ex:
+        err_msg = "CivicData customization. Error while changing url from http to https. \nAdditional details: "+str(ex)
+        log.warning(err_msg)
+    # CivicData - Fix for 'Unsecured content http served over https while serving datapreview in iframe' which is specially seen in Chrome block ends
 
     return snippet("dataviewer/snippets/data_preview.html",
                    embed=directly,
