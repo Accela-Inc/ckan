@@ -332,6 +332,34 @@ def datastore_delete(context, data_dict):
     result.pop('connection_url')
     return result
 
+# CivicData customization block starts
+def datastore_delete_sql(context, data_dict):
+    '''Execute SQL delete on the DataStore.
+
+    :param resource_id: resource id that the data is going to be stored against
+    :type resource_id: string
+    :param where: delete condition
+    :type where: string
+    :param user_id: user id or name
+    :type user_id: string
+    :param apikey: user apikey
+    :type apikey: string
+
+    '''
+    resource_id = _get_or_bust(data_dict, 'resource_id')
+    apikey = _get_or_bust(data_dict, 'apikey')
+    user_id = _get_or_bust(data_dict, 'user_id')
+    where = _get_or_bust(data_dict, 'where')
+
+    data_dict['connection_url'] = pylons.config['ckan.datastore.write_url']
+    data_dict['connection_read_url'] = pylons.config['sqlalchemy.url']
+
+    result = db.delete_sql(context, data_dict)
+    result.pop('id', None)
+    result.pop('connection_url', None)
+    result.pop('connection_read_url', None)
+    return result
+# CivicData customization block ends
 
 @logic.side_effect_free
 def datastore_search(context, data_dict):
@@ -454,22 +482,79 @@ def datastore_search_sql(context, data_dict):
     :type records: list of dictionaries
 
     '''
-    sql = _get_or_bust(data_dict, 'sql')
-
-    if not datastore_helpers.is_single_statement(sql):
-        raise p.toolkit.ValidationError({
-            'query': ['Query is not a single statement.']
-        })
-
-    p.toolkit.check_access('datastore_search_sql', context, data_dict)
-
-    data_dict['connection_url'] = pylons.config['ckan.datastore.read_url']
-
-    result = db.search_sql(context, data_dict)
-    result.pop('id', None)
-    result.pop('connection_url')
-    return result
-
+    
+    # CivicData customization block starts
+    try:
+        #try to execute this customized block
+        import re
+        from ckan.common import c
+        
+        sql = _get_or_bust(data_dict, 'sql')
+        user = c.userobj
+        pattern = re.compile(r"[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}")
+        sql = data_dict['sql'].replace('%', '%%')
+        match = pattern.search(sql)
+    
+        if match:
+            data_dict['resource_id'] = match.group()
+    
+        if not db._is_single_statement(sql):
+            raise p.toolkit.ValidationError({
+                'query': ['Query is not a single statement or contains semicolons.'],
+                'hint': [('If you want to use semicolons, use character encoding'
+                         '(; equals chr(59)) and string concatenation (||). ')]
+            })
+    
+        p.toolkit.check_access('datastore_search_sql', context, data_dict)
+    
+        data_dict['connection_write'] = pylons.config['ckan.datastore.write_url']
+        data_dict['connection_url'] = pylons.config['ckan.datastore.read_url']
+        data_dict['connection_read_url'] = pylons.config['sqlalchemy.url']
+    
+        data_dict['private'] = db.search_sql_check_private(context, data_dict)
+        if data_dict.get('private'):
+            try:
+                if user:
+                    data_dict['apikey'] = user.apikey
+                else:
+                    data_dict['apikey'] = _get_or_bust(data_dict, 'apikey')
+                result = db.search_sql_check_apikey(context, data_dict)
+                if not result:
+                    raise
+            except Exception, e:
+                log.error('Validation Error, missing value: apikey')
+                raise p.toolkit.NotAuthorized({
+                    'permissions': ['Not authorized to read resource.']
+                })
+    
+        result = db.search_sql(context, data_dict)
+        result.pop('id', None)
+        result.pop('connection_url', None)
+        result.pop('connection_write', None)
+        result.pop('connection_read_url', None)
+        result.pop('connection_read', None)
+        return result
+    except Exception, ex:
+        # Execute this block if above customized code fails
+        # this is default definition of ckan-2.4.9
+        log.error("CivicData customization error in datastore_search_sql. Trying default code from ckan-2.4.0")
+        log.error("Details: "+str(ex))
+        sql = _get_or_bust(data_dict, 'sql')
+    
+        if not datastore_helpers.is_single_statement(sql):
+            raise p.toolkit.ValidationError({
+                'query': ['Query is not a single statement.']
+            })
+    
+        p.toolkit.check_access('datastore_search_sql', context, data_dict)
+    
+        data_dict['connection_url'] = pylons.config['ckan.datastore.read_url']
+    
+        result = db.search_sql(context, data_dict)
+        result.pop('id', None)
+        result.pop('connection_url')
+        return result
+    # CivicData customization block ends
 
 def datastore_make_private(context, data_dict):
     ''' Deny access to the DataStore table through
