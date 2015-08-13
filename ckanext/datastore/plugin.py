@@ -239,19 +239,38 @@ class DatastorePlugin(p.SingletonPlugin):
             connection.close()
 
     def get_actions(self):
-        actions = {'datastore_create': action.datastore_create,
-                   'datastore_upsert': action.datastore_upsert,
-                   'datastore_delete': action.datastore_delete,
-                   'datastore_search': action.datastore_search,
-                   'datastore_info': action.datastore_info,
-                  }
-        if not self.legacy_mode:
-            actions.update({
-                'datastore_search_sql': action.datastore_search_sql,
-                'datastore_make_private': action.datastore_make_private,
-                'datastore_make_public': action.datastore_make_public})
-        return actions
-
+        # CivicData customization block starts
+        try:
+            # try to execute custom code first
+            actions = {'datastore_create': action.datastore_create,
+                       'datastore_upsert': action.datastore_upsert,
+                       'datastore_delete': action.datastore_delete,
+                       'datastore_search': action.datastore_search,
+                       'datastore_search_sql': action.datastore_search_sql,
+                      }
+            if not self.legacy_mode:
+                actions.update({
+                    'datastore_delete_sql': action.datastore_delete_sql,
+                    'datastore_make_private': action.datastore_make_private,
+                    'datastore_make_public': action.datastore_make_public})
+            return actions
+        except Exception, ex:
+            # if custom code fails, try the default code from ckan-2.4.0. 
+            log.error("CivicData customization error in get_actions datastore/plugin.py. Calling the ckan-2.4.0 code")
+            log.error("Details: "+ str(ex))    
+            actions = {'datastore_create': action.datastore_create,
+                       'datastore_upsert': action.datastore_upsert,
+                       'datastore_delete': action.datastore_delete,
+                       'datastore_search': action.datastore_search,
+                       'datastore_info': action.datastore_info,
+                      }
+            if not self.legacy_mode:
+                actions.update({
+                    'datastore_search_sql': action.datastore_search_sql,
+                    'datastore_make_private': action.datastore_make_private,
+                    'datastore_make_public': action.datastore_make_public})
+            return actions
+        # CivicData customization block ends
     def get_auth_functions(self):
         return {'datastore_create': auth.datastore_create,
                 'datastore_upsert': auth.datastore_upsert,
@@ -265,6 +284,15 @@ class DatastorePlugin(p.SingletonPlugin):
         m.connect('/datastore/dump/{resource_id}',
                   controller='ckanext.datastore.controller:DatastoreController',
                   action='dump')
+        # CivicData customization block starts
+        try:
+            m.connect('/datastore/json/{resource_id}',
+                      controller='ckanext.datastore.controller:DatastoreController',
+                      action='json')
+        except Exception, ex:
+            log.error("CivicData customization error in before_map in datastore/plugin.py. \nDetails: "+str(ex))
+            
+        # CivicData customization block ends
         return m
 
     def before_show(self, resource_dict):
