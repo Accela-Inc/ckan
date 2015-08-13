@@ -80,7 +80,7 @@ class DatastoreController(base.BaseController):
             f.flush()
             return f.getvalue()
         except p.toolkit.ObjectNotFound:
-            base.abort(404, p.toolkit._('DataStore resource not found'))
+            base.abort(404, p.toolkit._('From CivicData Customization- DataStore resource not found'))
 
         return None
     # CivicData customization block ends
