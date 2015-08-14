@@ -1174,6 +1174,151 @@ def delete(context, data_dict):
     finally:
         context['connection'].close()
 
+# CivicData customization block starts
+def auth_super_user(context, data_dict):
+    '''
+
+    super user authorize
+    :param context:
+    :param data_dict:
+    :return: true is sysadmin
+    '''
+
+    sql = u"""
+        SELECT count(*) AS count FROM "user" WHERE apikey = '{0}' AND sysadmin = 't' AND state = 'active' AND (id = '{1}' OR name ='{1}')
+        """.format(data_dict['apikey'], data_dict['user_id'])
+    results = context['connection_read_url'].execute(sql).fetchone()
+    return results['count'] > 0
+
+def auth_not_group(context, data_dict):
+    '''
+    user has not group authorize
+    :param context:
+    :param data_dict:
+    :return:
+    '''
+    sql = u"""
+    SELECT count(*) AS count FROM "package" WHERE state = 'active' AND id = (
+        SELECT package_id FROM "resource_group" WHERE id = (
+            SELECT resource_group_id FROM "resource" WHERE id = '{0}'
+        )
+    )
+    AND creator_user_id = (
+        SELECT id FROM "user" WHERE apikey = '{1}' AND (id = '{2}' OR name ='{2}')
+    )""".format(data_dict['resource_id'], data_dict['apikey'], data_dict['user_id'])
+
+    results = context['connection_read_url'].execute(sql).fetchone()
+    return results['count'] > 0
+
+def auth_has_group(context, data_dict):
+    '''
+    user has a group admin authorize
+    :param context:
+    :param data_dict:
+    :return:
+    '''
+    sql = u"""
+    SELECT count(*) AS count FROM "group_role"
+    INNER JOIN "user_object_role" ON "group_role".user_object_role_id = "user_object_role".id
+    INNER JOIN "group" ON "group".id = "group_role".group_id
+    WHERE "group".state = 'active' AND group_id = (
+        SELECT owner_org FROM "package" WHERE id = (
+            SELECT package_id FROM "resource_group" WHERE id = (
+            SELECT resource_group_id FROM "resource" WHERE id = '{0}'
+            )
+        )
+        AND owner_org IS NOT NULL
+    ) AND user_id = (
+        SELECT id FROM "user" WHERE apikey = '{1}' AND (id = '{2}' OR name ='{2}')
+    ) AND role = 'admin'""".format(data_dict['resource_id'], data_dict['apikey'], data_dict['user_id'])
+    results = context['connection_read_url'].execute(sql).fetchone()
+    return results['count'] > 0
+
+def auth_has_member(context, data_dict):
+    '''
+    user has a member admin authorize
+    :param context:
+    :param data_dict:
+    :return:
+    '''
+    sql = u"""
+    SELECT COUNT(*) AS count FROM member
+    WHERE table_name = 'user' AND state='active' AND table_id = (
+        SELECT id FROM "user" WHERE apikey = '{0}' AND (id = '{1}' OR name ='{1}')
+    ) AND group_id IN (
+        SELECT group_id FROM member
+        WHERE table_name = 'package' AND table_id = (
+            SELECT id FROM "package" WHERE id = (
+                SELECT package_id FROM "resource_group" WHERE id = (
+                    SELECT resource_group_id FROM "resource" WHERE id = '{2}'
+                )
+            )
+        )
+    ) AND capacity = 'admin'
+    """.format(data_dict['apikey'], data_dict['user_id'], data_dict['resource_id'])
+    results = context['connection_read_url'].execute(sql).fetchone()
+    return results['count'] > 0
+
+def auth_exists_resource(context, data_dict):
+    '''
+    Check resource exists datastoredb
+    :param context:
+    :param data_dict:
+    :return:
+    '''
+    context['connection'].execute(u'''SELECT COUNT(*) AS count FROM "{0}"'''.format(data_dict['resource_id']))
+
+def auth_get_engine(data_dict):
+    connection_read_url = data_dict['connection_read_url']
+    engine = _engines.get(connection_read_url)
+    return engine
+
+def delete_sql(context, data_dict):
+    engine = _get_engine(data_dict)
+    auth_engine = auth_get_engine(data_dict)
+    context['connection'] = engine.connect()
+    context['connection_read_url'] = auth_engine.connect()
+    timeout = context.get('query_timeout', _TIMEOUT)
+    _cache_types(context)
+
+    NOT_AUTHORIZE = False
+
+    trans = context['connection'].begin()
+    try:
+        context['connection_read_url'].execute(u'SET LOCAL statement_timeout TO {0}'.format(timeout))
+
+        if(auth_super_user(context, data_dict) or auth_not_group(context, data_dict)
+           or auth_has_group(context, data_dict) or auth_has_member(context, data_dict)):
+            context['connection'].execute(
+                u'''DELETE FROM "{0}" WHERE {1}'''.format(data_dict['resource_id'], data_dict['where']).replace('%', '%%')
+            )
+            trans.commit()
+        else:
+            NOT_AUTHORIZE = True
+            raise toolkit.NotAuthorized({
+                'permissions': ['Not authorized to delete resource.']
+            })
+        return _unrename_json_field(data_dict)
+    except Exception, e:
+        trans.rollback()
+
+        if (NOT_AUTHORIZE):
+            raise toolkit.NotAuthorized({
+                'permissions': ['Not authorized to delete resource.']
+            })
+
+        raise ValidationError({
+            'message': ['Invalid delete.'],
+            'info': {
+                'statement': [e.statement],
+                'params': [e.params],
+                'orig': [str(e.orig)]
+            }
+        })
+    finally:
+        context['connection'].close()
+ 
+# CivicData customization block ends
 
 def search(context, data_dict):
     engine = _get_engine(data_dict)
