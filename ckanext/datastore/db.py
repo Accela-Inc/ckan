@@ -1375,9 +1375,16 @@ def search_sql(context, data_dict):
 
     except ProgrammingError, e:
         if e.orig.pgcode == _PG_ERR_CODE['permission_denied']:
+            # CivicData customization block starts
+            # Original code - 
+            '''
             raise toolkit.NotAuthorized({
                 'permissions': ['Not authorized to read resource.']
             })
+            '''
+            # Replaced by 
+            _search_sql_permission(context, data_dict)
+            # CivicData customization block ends
 
         def _remove_explain(msg):
             return (msg.replace('EXPLAIN (FORMAT JSON) ', '')
@@ -1400,6 +1407,108 @@ def search_sql(context, data_dict):
     finally:
         context['connection'].close()
 
+# CivicData customization block starts
+def _search_sql_permission(context, data_dict):
+    if data_dict.get('private'):
+        data_dict['connection_read'] = data_dict['connection_url']
+        data_dict['connection_url'] = data_dict['connection_write']
+        make_public(context, data_dict)
+        
+    search_sql(context, data_dict)
+
+
+def search_sql_check_apikey(context, data_dict):
+    '''
+
+    :param context: from search_sql
+    :param data_dict: from search_sql
+    :return: True / False
+    '''
+    auth_engine = auth_get_engine(data_dict)
+    context['connection_read_url'] = auth_engine.connect()
+
+    try:
+        if data_dict.get('apikey'):
+            # sysadmin
+            sql = u'''SELECT COUNT(*) AS count FROM "user" WHERE apikey = '{0}' AND sysadmin= 't' AND state='active' '''.format(data_dict.get('apikey'))
+            results = context['connection_read_url'].execute(sql).fetchone()
+            sysadmin = results['count'] > 0
+            if not sysadmin:
+                # owner
+                sql = u'''select count(*) as count from package WHERE id =
+                (select package_id from resource_group WHERE id =
+                (select resource_group_id from resource where id = '{0}'))
+                AND creator_user_id = (select id from "user" WHERE apikey = '{1}')'''.format(data_dict.get('resource_id'), data_dict.get('apikey'))
+                results = context['connection_read_url'].execute(sql).fetchone()
+                owner = results['count'] > 0
+                if not owner:
+                    # member
+                    sql = u'''SELECT count(*) as count FROM member
+                    WHERE table_name = 'user' AND state = 'active' AND table_id = (
+                        SELECT id FROM "user" WHERE apikey = '{0}'
+                    ) AND group_id IN (
+                        SELECT group_id FROM member
+                        WHERE table_name = 'package' AND table_id = (
+                            SELECT id FROM "package" WHERE id = (
+                                SELECT package_id FROM "resource_group" WHERE id = (
+                                SELECT resource_group_id From "resource" WHERE id = '{1}'
+                                )
+                            )
+                        )
+                    ) '''.format(data_dict.get('apikey'), data_dict.get('resource_id'))
+                    results = context['connection_read_url'].execute(sql).fetchone()
+                    member = results['count'] > 0
+                    if not member:
+                        return False
+            return True
+    except DBAPIError, e:
+        if e.orig.pgcode == _PG_ERR_CODE['query_canceled']:
+            raise ValidationError({
+                'query': ['Search took too long']
+            })
+        raise ValidationError({
+            'query': ['Invalid query'],
+            'info': {
+                'statement': [e.statement],
+                'params': [e.params],
+                'orig': [str(e.orig)]
+            }
+        })
+    finally:
+        context['connection_read_url'].close()
+
+def search_sql_check_private(context, data_dict):
+    '''
+
+    :param context: from search_sql
+    :param data_dict: from search_sql
+    :return: True / False
+    '''
+    auth_engine = auth_get_engine(data_dict)
+    context['connection_read_url'] = auth_engine.connect()
+
+    try:
+        sql = u'''SELECT private FROM package WHERE id =
+        (SELECT package_id FROM resource_group WHERE id =
+        (SELECT resource_group_id FROM resource WHERE id = '{0}')) AND state = 'active' '''.format(data_dict.get('resource_id'))
+        results = context['connection_read_url'].execute(sql).fetchone()
+        return results['private']
+    except DBAPIError, e:
+        if e.orig.pgcode == _PG_ERR_CODE['query_canceled']:
+            raise ValidationError({
+                'query': ['Search took too long']
+            })
+        raise ValidationError({
+            'query': ['Invalid query'],
+            'info': {
+                'statement': [e.statement],
+                'params': [e.params],
+                'orig': [str(e.orig)]
+            }
+        })
+    finally:
+        context['connection_read_url'].close()
+# CivicData customization block ends
 
 def _get_read_only_user(data_dict):
     parsed = cli.parse_db_config('ckan.datastore.read_url')
