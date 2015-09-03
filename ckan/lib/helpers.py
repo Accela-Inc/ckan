@@ -109,6 +109,7 @@ def url(*args, **kw):
     my_url = _pylons_default_url(*args, **kw)
     # CivicData - Bug-Fix for 'Unsecured content http served over https' block starts
     try: 
+        log.error("\n\nCivicData- my_url: " + str(my_url))
         if my_url.find('http://') == 0 and (config.get('ckan.site_url')).find('https://') == 0:
             my_url = 'https://' + my_url[7: ]
     except Exception, ex:
@@ -1737,6 +1738,7 @@ def resource_preview(resource, package):
     
     # CivicData - Fix for 'Unsecured content http served over https while serving datapreview in iframe' which is specially seen in Chrome block starts
     try: 
+        log.error("\n\nCivicData- default url: " + str(my_url))
         if url.find('http://') == 0 and (config.get('ckan.site_url')).find('https://') == 0:
             url = 'https://' + url[7: ]
     except Exception, ex:
